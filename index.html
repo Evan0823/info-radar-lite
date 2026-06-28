@@ -217,8 +217,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/marked@17/marked.min.js"></script>
   <script>
-    // Wait for DOM + marked to be ready
-    window.addEventListener('DOMContentLoaded', () => {
+    // Ensure marked is loaded before init
+    function boot() {
       if (typeof marked === 'undefined') {
         document.getElementById('content').innerHTML =
           '<div class="empty-state"><div class="icon">⚠️</div>Markdown 渲染器加载失败<br><small>请检查网络连接后刷新</small></div>';
@@ -226,7 +226,13 @@
         return;
       }
       init();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
     const dateList = document.getElementById('date-list');
     const content = document.getElementById('content');
     const themeBtn = document.getElementById('theme-btn');
