@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0B0D14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>📡 Info Radar</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #0B0D14;
+      --bg-side: #080A10;
+      --bg-hover: #12151F;
+      --bg-active: #1A1E2E;
+      --border: #1E2235;
+      --text: #C9D1D9;
+      --muted: #636E82;
+      --dim: #2E3547;
+      --accent: #E8A03D;
+      --accent-bg: rgba(232,160,61,0.10);
+      --code-bg: #0D1017;
+      --link: #79B8FF;
+      --green: #3FB950;
+      --red: #F85149;
+    }
+    [data-theme="light"] {
+      --bg: #FAFBFC;
+      --bg-side: #F0F2F5;
+      --bg-hover: #E8ECF1;
+      --bg-active: #DDE3EA;
+      --border: #D2D8E0;
+      --text: #1C1E26;
+      --muted: #5A6678;
+      --dim: #B8C2D0;
+      --accent: #B57200;
+      --accent-bg: rgba(181,114,0,0.08);
+      --code-bg: #F0F2F5;
+      --link: #0451A5;
+      --green: #1A7F37;
+      --red: #CF222E;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    #hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; height: 48px; flex-shrink: 0;
+      background: var(--bg-side); border-bottom: 1px solid var(--border);
+    }
+    .brand {
+      font-size: 14px; font-weight: 700; letter-spacing: -0.02em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .brand-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 6px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .hdr-right { display: flex; align-items: center; gap: 8px; }
+    .hdr-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      padding: 4px 12px; border-radius: 4px; cursor: pointer;
+      font-size: 11px; text-decoration: none;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .hdr-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Layout ── */
+    #app { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 220px; flex-shrink: 0;
+      background: var(--bg-side); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-label {
+      padding: 12px 16px 6px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+      color: var(--muted); text-transform: uppercase;
+    }
+    #date-list {
+      flex: 1; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: var(--dim) transparent;
+    }
+    #date-list::-webkit-scrollbar { width: 4px; }
+    #date-list::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+    .date-item {
+      display: block; width: 100%; padding: 8px 16px;
+      background: none; border: none; color: var(--muted);
+      font-size: 13px; text-align: left; cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+      border-left: 2px solid transparent;
+      font-family: inherit;
+    }
+    .date-item:hover { background: var(--bg-hover); color: var(--text); }
+    .date-item.active {
+      background: var(--bg-active); color: var(--text);
+      border-left-color: var(--accent); font-weight: 600;
+    }
+    .today-badge {
+      display: inline-block;
+      background: var(--accent-bg); color: var(--accent);
+      font-size: 9px; padding: 1px 5px; border-radius: 3px;
+      margin-left: 6px; font-weight: 600;
+    }
+
+    /* ── Content ── */
+    #content-wrap {
+      flex: 1; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: var(--dim) transparent;
+    }
+    #content-wrap::-webkit-scrollbar { width: 4px; }
+    #content-wrap::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+    #content {
+      padding: 24px 28px; max-width: 780px;
+    }
+    #content h1 { font-size: 20px; margin-bottom: 8px; letter-spacing: -0.02em; }
+    #content h2 { font-size: 16px; margin: 24px 0 10px; color: var(--accent); }
+    #content h3 { font-size: 14px; margin: 16px 0 6px; }
+    #content p { margin: 6px 0; font-size: 14px; }
+    #content a { color: var(--link); text-decoration: none; }
+    #content a:hover { text-decoration: underline; }
+    #content blockquote {
+      border-left: 3px solid var(--accent); margin: 10px 0;
+      padding: 6px 14px; background: var(--accent-bg); border-radius: 0 4px 4px 0;
+      font-size: 13px; color: var(--muted);
+    }
+    #content table {
+      width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px;
+    }
+    #content th {
+      background: var(--bg-side); padding: 8px 10px; text-align: left;
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      border-bottom: 2px solid var(--border);
+    }
+    #content td {
+      padding: 8px 10px; border-bottom: 1px solid var(--border);
+    }
+    #content td:first-child { white-space: nowrap; }
+    #content hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    #content code {
+      background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 12px;
+    }
+    #content pre {
+      background: var(--code-bg); padding: 12px 16px; border-radius: 6px;
+      overflow-x: auto; font-size: 12px; line-height: 1.5;
+    }
+    #content img { max-width: 100%; border-radius: 6px; }
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--muted);
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .loading { text-align: center; padding: 40px; color: var(--muted); }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      #app { flex-direction: column; }
+      #sidebar {
+        width: 100%; height: auto; max-height: 120px;
+        border-right: none; border-bottom: 1px solid var(--border);
+      }
+      .sidebar-label { padding: 8px 16px 2px; font-size: 9px; }
+      #date-list {
+        display: flex; flex-direction: row; overflow-x: auto;
+        overflow-y: hidden; padding: 4px 8px;
+      }
+      #date-list::-webkit-scrollbar { height: 2px; }
+      .date-item {
+        white-space: nowrap; padding: 6px 12px; border-left: none;
+        border-bottom: 2px solid transparent; font-size: 12px;
+        flex-shrink: 0;
+      }
+      .date-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+      .today-badge { margin-left: 3px; font-size: 8px; }
+      #content { padding: 16px 14px; }
+      #content h1 { font-size: 18px; }
+      #content table { font-size: 11px; }
+      #content td { padding: 6px 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="hdr">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      📡 Info Radar
+    </div>
+    <div class="hdr-right">
+      <a class="hdr-btn" href="#" id="theme-btn" title="Toggle theme">🌓</a>
+      <a class="hdr-btn" href="https://github.com/duanyytop/agents-radar" target="_blank">GitHub ↗</a>
+    </div>
+  </div>
+
+  <div id="app">
+    <div id="sidebar">
+      <div class="sidebar-label">📅 历史日报</div>
+      <div id="date-list"><div class="loading">加载中...</div></div>
+    </div>
+    <div id="content-wrap">
+      <div id="content"><div class="loading">加载中...</div></div>
+    </div>
+  </div>
+
+  <script>
+    const dateList = document.getElementById('date-list');
+    const content = document.getElementById('content');
+    const themeBtn = document.getElementById('theme-btn');
+    const MANIFEST_URL = './manifest.json';
+
+    let manifest = null;
+    let currentDigest = null;
+
+    // ── Theme toggle ──
+    const saved = localStorage.getItem('radar-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    themeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('radar-theme', next);
+    });
+
+    // ── Load manifest ──
+    async function init() {
+      try {
+        const resp = await fetch(MANIFEST_URL);
+        if (!resp.ok) throw new Error('manifest not found');
+        manifest = await resp.json();
+        renderSidebar();
+        // Auto-load latest digest
+        if (manifest.dates && manifest.dates.length > 0) {
+          loadDigest(manifest.dates[0].date);
+        } else {
+          content.innerHTML = '<div class="empty-state"><div class="icon">📭</div>暂无日报数据<br><small>运行 <code>pnpm start</code> 生成第一篇</small></div>';
+        }
+      } catch (err) {
+        content.innerHTML = '<div class="empty-state"><div class="icon">🔌</div>无法加载数据<br><small>' + err.message + '</small></div>';
+      }
+    }
+
+    function renderSidebar() {
+      if (!manifest || !manifest.dates) return;
+      const today = new Date().toISOString().slice(0, 10);
+      dateList.innerHTML = manifest.dates.map(d => {
+        const isToday = d.date === today;
+        return `<button class="date-item${d.date === (currentDigest || (manifest.dates[0] && manifest.dates[0].date)) ? ' active' : ''}"
+                     data-date="${d.date}" onclick="loadDigest('${d.date}')">
+          ${formatDate(d.date)}${isToday ? '<span class="today-badge">今天</span>' : ''}
+        </button>`;
+      }).join('');
+    }
+
+    function formatDate(ds) {
+      const parts = ds.split('-');
+      return `${parts[1]}/${parts[2]}`;
+    }
+
+    async function loadDigest(date) {
+      currentDigest = date;
+      content.innerHTML = '<div class="loading">⏳ 加载中...</div>';
+
+      // Highlight active date
+      document.querySelectorAll('.date-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.date === date);
+      });
+
+      try {
+        const resp = await fetch(`digests/${date}.md`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const md = await resp.text();
+        const html = marked.parse(md);
+        content.innerHTML = html;
+      } catch (err) {
+        content.innerHTML = '<div class="empty-state"><div class="icon">📂</div>该日期暂无数据<br><small>' + err.message + '</small></div>';
+      }
+    }
+
+    // Expose to onclick
+    window.loadDigest = loadDigest;
+
+    init();
+  </script>
+</body>
+</html>
