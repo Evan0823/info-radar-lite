@@ -215,7 +215,7 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked@17/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     // Ensure marked is loaded before init
     function boot() {
@@ -300,7 +300,8 @@
         const resp = await fetch(`digests/${date}.md`);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const md = await resp.text();
-        const html = marked.parse(md);
+        // 兼容 marked v4 (marked()) 和 v5+ (marked.parse())
+        const html = typeof marked.parse === 'function' ? marked.parse(md) : marked(md);
         content.innerHTML = html;
       } catch (err) {
         content.innerHTML = '<div class="empty-state"><div class="icon">📂</div>该日期暂无数据<br><small>' + err.message + '</small></div>';
