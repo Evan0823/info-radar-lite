@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>📡 Info Radar</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
       --bg: #0B0D14;
@@ -216,7 +215,18 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked@17/marked.min.js"></script>
   <script>
+    // Wait for DOM + marked to be ready
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof marked === 'undefined') {
+        document.getElementById('content').innerHTML =
+          '<div class="empty-state"><div class="icon">⚠️</div>Markdown 渲染器加载失败<br><small>请检查网络连接后刷新</small></div>';
+        document.getElementById('date-list').innerHTML = '';
+        return;
+      }
+      init();
+    });
     const dateList = document.getElementById('date-list');
     const content = document.getElementById('content');
     const themeBtn = document.getElementById('theme-btn');
@@ -293,8 +303,6 @@
 
     // Expose to onclick
     window.loadDigest = loadDigest;
-
-    init();
   </script>
 </body>
 </html>
