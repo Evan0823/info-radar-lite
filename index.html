@@ -6,6 +6,9 @@
   <meta name="theme-color" content="#0B0D14">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>📡 Info Radar</title>
   <style>
     :root {
@@ -265,7 +268,7 @@
     // ── Load manifest ──
     async function init() {
       try {
-        const resp = await fetch(MANIFEST_URL);
+        const resp = await fetch(MANIFEST_URL + '?v=' + Date.now());
         if (!resp.ok) throw new Error('manifest not found');
         manifest = await resp.json();
         renderSidebar();
@@ -307,7 +310,7 @@
       });
 
       try {
-        const resp = await fetch(`digests/${date}.md`);
+        const resp = await fetch(`digests/${date}.md?v=${Date.now()}`);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const md = await resp.text();
         // 兼容 marked v4 (marked()) 和 v5+ (marked.parse())
