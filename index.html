@@ -146,9 +146,19 @@
       background: var(--bg-side); padding: 8px 10px; text-align: left;
       font-size: 11px; font-weight: 600; color: var(--muted);
       border-bottom: 2px solid var(--border);
+      position: relative;
+    }
+    #content th .col-resize {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 6px;
+      cursor: col-resize; z-index: 2;
+    }
+    #content th .col-resize:hover,
+    #content th .col-resize.active {
+      background: var(--accent); opacity: 0.5;
     }
     #content td {
       padding: 8px 10px; border-bottom: 1px solid var(--border);
+      overflow: hidden; text-overflow: ellipsis;
     }
     #content td:first-child { white-space: nowrap; }
     #content hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
@@ -303,9 +313,70 @@
         // 兼容 marked v4 (marked()) 和 v5+ (marked.parse())
         const html = typeof marked.parse === 'function' ? marked.parse(md) : marked(md);
         content.innerHTML = html;
+        // 表格渲染后，给每列加上拖拽调整宽度
+        requestAnimationFrame(() => setupColumnResize());
       } catch (err) {
         content.innerHTML = '<div class="empty-state"><div class="icon">📂</div>该日期暂无数据<br><small>' + err.message + '</small></div>';
       }
+    }
+
+    // ── Column resize ──
+    function setupColumnResize() {
+      const tables = content.querySelectorAll('table');
+      tables.forEach(table => {
+        const headers = table.querySelectorAll('th');
+        if (!headers.length) return;
+
+        headers.forEach(th => {
+          // 跳过已经有 handle 的
+          if (th.querySelector('.col-resize')) return;
+
+          const handle = document.createElement('div');
+          handle.className = 'col-resize';
+          th.appendChild(handle);
+
+          let startX = 0;
+          let startWidth = 0;
+          let activeHandle = null;
+
+          const onStart = (e) => {
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            startX = clientX;
+            startWidth = th.getBoundingClientRect().width;
+            activeHandle = handle;
+            activeHandle.classList.add('active');
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = 'col-resize';
+          };
+
+          const onMove = (e) => {
+            if (!activeHandle) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const delta = clientX - startX;
+            const newWidth = Math.max(30, startWidth + delta);
+            th.style.width = newWidth + 'px';
+            th.style.minWidth = newWidth + 'px';
+            // 让 table 使用 auto 布局以支持列宽
+            table.style.tableLayout = 'auto';
+          };
+
+          const onEnd = () => {
+            if (!activeHandle) return;
+            activeHandle.classList.remove('active');
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+            activeHandle = null;
+          };
+
+          handle.addEventListener('mousedown', onStart);
+          handle.addEventListener('touchstart', onStart, { passive: false });
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('touchmove', onMove, { passive: false });
+          document.addEventListener('mouseup', onEnd);
+          document.addEventListener('touchend', onEnd);
+        });
+      });
     }
 
     // Expose to onclick
